@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Atlas — FIH Group PLC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
+
+#pw-gate{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#0e1621;font-family:Oswald,sans-serif;overflow:hidden}
+#pw-gate::before{content:'';position:absolute;inset:-80%;z-index:0;
+ background:
+ repeating-linear-gradient(0deg,transparent,transparent 76px,rgba(0,119,255,.04) 76px,rgba(0,119,255,.04) 78px),
+ repeating-linear-gradient(90deg,transparent,transparent 76px,rgba(0,119,255,.04) 76px,rgba(0,119,255,.04) 78px);
+ animation:bDrift 30s linear infinite}
+@keyframes bDrift{to{transform:translate(-78px,-78px) rotate(.5deg)}}
+@keyframes cardIn{0%{opacity:0;transform:translateY(-20px) scale(.95)}100%{opacity:1;transform:none}}
+#main-content{display:none}
+#main-content.show{display:block;animation:reveal .5s ease-out both}
+@keyframes reveal{from{opacity:0}to{opacity:1}}
+
+:root {
+ --bg: #060810;
+ --surface: #0c0e18;
+ --surface2: #12141f;
+ --surface3: #181a28;
+ --border: #1e2035;
+ --border-bright: #2a2d45;
+ --gold: #0077FF;
+ --gold-dim: #004499;
+ --gold-bright: #3399FF;
+ --fic-teal: #00C9A7;
+ --momart-purple: #9370db;
+ --phfc-amber: #d4860b;
+ --fbs-red: #d44;
+ --red: #d44;
+ --red-soft: #c44040;
+ --green: #4a9;
+ --text: #d8d8e8;
+ --text-dim: #888898;
+ --text-faint: #555568;
+ --text-bright: #f0f0ff;
+ --fortress: #0077FF;
+ --durable: #00C9A7;
+ --exposed: #d44;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+ background: var(--bg);
+ color: var(--text);
+ font-family: 'Inter', -apple-system, sans-serif;
+ font-size: 13px;
+ line-height: 1.6;
+ min-height: 100vh;
+}
+body::before {
+ content: '';
+ position: fixed; inset: 0;
+ background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+ pointer-events: none; z-index: 1000; opacity: 0.4;
+}
+
+.masthead {
+ border-bottom: 1px solid var(--border-bright);
+ background: linear-gradient(180deg, #0a0c14 0%, var(--bg) 100%);
+ position: relative;
+}
+.masthead::before {
+ content: '';
+ position: absolute; top: 0; left: 0; right: 0; height: 2px;
+ background: linear-gradient(90deg, transparent 0%, var(--gold) 20%, var(--fic-teal) 40%, var(--gold-bright) 60%, var(--momart-purple) 80%, transparent 100%);
+}
+.masthead-inner {
+ max-width: 1520px; margin: 0 auto; padding: 24px 32px 20px;
+}
+.classification {
+ font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+ letter-spacing: 0.25em; color: var(--red); text-transform: uppercase; margin-bottom: 8px;
+}
+.masthead h1 {
+ font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700;
+ color: var(--text-bright); letter-spacing: -0.5px;
+}
+.masthead h1 .g { color: var(--gold); }
+.masthead h1 .gr { color: var(--fic-teal); }
+.masthead .subtitle {
+ font-size: 13px; color: var(--text-dim); margin-top: 4px; font-weight: 300;
+}
+.masthead .meta-row {
+ display: flex; gap: 28px; margin-top: 14px; padding-top: 12px;
+ border-top: 1px solid var(--border);
+ font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
+ color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.tab-nav {
+ background: var(--surface);
+ border-bottom: 1px solid var(--border-bright);
+ position: sticky; top: 0; z-index: 500;
+}
+.tab-nav-inner {
+ max-width: 1520px; margin: 0 auto; padding: 0 32px;
+ display: flex; gap: 0; overflow-x: auto;
+ -webkit-overflow-scrolling: touch;
+ scrollbar-width: none;
+}
+.tab-nav-inner::-webkit-scrollbar { display: none; }
+.tab-btn {
+ font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+ letter-spacing: 0.08em; text-transform: uppercase;
+ padding: 12px 18px; color: var(--text-faint);
+ border: none; background: none; cursor: pointer;
+ border-bottom: 2px solid transparent;
+ white-space: nowrap; transition: all 0.2s;
+}
+.tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+.src {
+ position: relative; cursor: help;
+ border-bottom: 1px dotted var(--gold); color: var(--text-bright);
+}
+.src:hover { color: var(--gold); }
+.src .tip {
+ display: none; position: absolute; bottom: 100%; left: 50%;
+ transform: translateX(-50%); width: 280px; padding: 8px 10px;
+ background: #1a1d2a; border: 1px solid var(--gold); border-radius: 6px;
+ font-size: 10px; line-height: 1.5; color: var(--text);
+ font-family: 'IBM Plex Mono', monospace; z-index: 999;
+ box-shadow: 0 4px 16px rgba(0,0,0,0.4); pointer-events: none;
+}
+.src .tip strong { color: var(--gold); }
+.src:hover .tip { display: block; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.container { max-width: 1520px; margin: 0 auto; padding: 0 32px; }
+.section { padding: 32px 0; border-bottom: 1px solid var(--border); }
+.section:last-child { border-bottom: none; }
+.section-label {
+ font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+ letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+}
+.section h2 {
+ font-family: 'Playfair Display', serif; font-size: 22px;
+ color: var(--text-bright); margin-bottom: 4px;
+}
+.section .sub {
+ font-size: 12px; color: var(--text-dim); margin-bottom: 20px;
+ font-style: italic; max-width: 900px;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+.grid-5 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 14px; }
+.grid-6 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 14px; }
+.card {
+ background: var(--surface); border: 1px solid var(--border);
+ border-radius: 8px; padding: 16px; position: relative; overflow: hidden;
+}
+.card-top { height: 3px; position: absolute; top: 0; left: 0; right: 0; }
+.card-label {
+ font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+ letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px;
+}
+.card-val {
+ font-family: 'IBM Plex Mono', monospace; font-size: 24px;
+ font-weight: 700; color: var(--text-bright);
+}
+.card-body { font-size: 11px; color: var(--text-dim); line-height: 1.7; margin-top: 6px; }
+.card-body strong { color: var(--text); }
+
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: visible; }
+table.ct { width: 100%; border-collapse: collapse; font-size: 12px; border-radius: 8px; overflow: hidden; }
+table.ct thead th {
+ font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+ letter-spacing: 0.1em; text-transform: uppercase;
+ padding: 11px 13px; text-align: left;
+ border-bottom: 2px solid var(--border-bright);
+ color: var(--text-faint); background: var(--surface);
+}
+table.ct tbody td {
+ padding: 10px 13px; border-bottom: 1px solid var(--border);
+ vertical-align: top; line-height: 1.55;
+}
+table.ct tbody tr:hover td { background: rgba(255,255,255,0.015); }
+table.ct td:first-child { font-weight: 600; color: var(--text-bright); font-size: 11px; }
+.cell-val { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 12px; }
+.r { text-align: right; }
+
+.badge {
+ display: inline-flex; align-items: center; gap: 4px;
+ padding: 2px 7px; border-radius: 3px;
+ font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+ font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.badge-green { background: rgba(76,175,80,0.15); color: #6fcf6f; border: 1px solid rgba(76,175,80,0.25); }
+.badge-blue { background: rgba(0,119,255,0.15); color: #4da6ff; border: 1px solid rgba(0,119,255,0.25); }
+.badge-amber { background: rgba(212,160,11,0.15); color: #d4a00b; border: 1px solid rgba(212,160,11,0.25); }
+.badge-red { background: rgba(212,68,68,0.15); color: #e06060; border: 1px solid rgba(212,68,68,0.25); }
+.badge-purple { background: rgba(147,112,219,0.15); color: #b090e0; border: 1px solid rgba(147,112,219,0.25); }
+.badge-teal { background: rgba(0,201,167,0.15); color: #00C9A7; border: 1px solid rgba(0,201,167,0.25); }
+
+.synth {
+ background: var(--surface2); border: 1px solid var(--gold-dim);
+ border-radius: 8px; padding: 20px 24px; margin-top: 18px;
+}
+.synth h3 {
+ font-family: 'Playfair Display', serif; font-size: 16px;
+ color: var(--gold); margin-bottom: 10px;
+}
+.synth p { color: var(--text); line-height: 1.7; margin-bottom: 8px; }
+.synth p:last-child { margin-bottom: 0; }
+
+.metric-strip {
+ display: grid; gap: 1px; background: var(--border);
+ border-radius: 8px; overflow: hidden;
+}
+.metric-cell { background: var(--surface); padding: 14px 16px; text-align: center; }
+.mc-val { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; }
+.mc-label {
+ font-size: 9px; color: var(--text-faint); text-transform: uppercase;
+ letter-spacing: 0.08em; font-family: 'IBM Plex Mono', monospace; margin-top: 3px;
+}
+
+.bar-h { display: flex; height: 22px; border-radius: 3px; overflow: hidden; margin: 4px 0; }
+.bar-seg {
+ display: flex; align-items: center; justify-content: center;
+ font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+ font-weight: 600; letter-spacing: 0.05em;
+}
+
+.chart-wrap {
+ background: var(--surface); border: 1px solid var(--border);
+ border-radius: 8px; padding: 20px; margin: 14px 0;
+}
+.chart-area { height: 350px; position: relative; }
+
+.footnotes {
+ padding: 20px 0 36px; font-size: 10px; color: var(--text-faint);
+ line-height: 1.7; font-family: 'IBM Plex Mono', monospace;
+}
+
+.tier-fortress { border-left: 3px solid var(--fortress); }
+.tier-durable { border-left: 3px solid var(--durable); }
+.tier-exposed { border-left: 3px solid var(--exposed); }
+
+@media (max-width: 1100px) {
+ .grid-2,.grid-3,.grid-4,.grid-5,.grid-6 { grid-template-columns: 1fr; }
+ .tab-btn { padding: 10px 12px; font-size: 9px; }
+}
+@media (max-width: 768px) {
+ .container { padding: 0 16px; }
+ .section { padding: 20px 0; }
+ .section h2 { font-size: 17px; }
+ .masthead-inner { padding: 24px 16px 18px; }
+ .masthead h1 { font-size: 18px; }
+ .tab-btn { padding: 8px 8px; font-size: 7.5px; letter-spacing: 0.04em; }
+ .card { padding: 12px; }
+ .card-val { font-size: 18px; }
+ .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+ table.ct { min-width: 600px; }
+ .mc-val { font-size: 18px; }
+ .synth { padding: 14px 16px; }
+}
+@media (max-width: 480px) {
+ .tab-btn { padding: 7px 6px; font-size: 7px; }
+ .masthead h1 { font-size: 15px; }
+ .card-val { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+<div style="max-width:420px;width:90%;background:#111827;border-radius:14px;padding:40px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;z-index:1;animation:cardIn .6s cubic-bezier(.34,1.56,.64,1) both;border:1px solid #1e293b">
+ <div style="font-size:13px;letter-spacing:.25em;text-transform:uppercase;color:#0077FF;font-weight:700;margin-bottom:6px">Control Acquisition</div>
+ <div style="font-family:'Playfair Display',serif;font-size:26px;color:#f0f0ff;font-weight:700;margin-bottom:4px">Project Atlas</div>
+ <div style="font-size:11px;color:#888;margin-bottom:24px">FIH Group PLC &middot; AIM: FIH &middot; Prepared by Joe Barry</div>
+ <div style="width:60px;height:2px;background:#0077FF;margin:0 auto 24px;border-radius:1px"></div>
+ <input type="text" id="pw-field" placeholder="Password" autocomplete="off" spellcheck="false" style="width:100%;padding:12px 16px;border:2px solid #1e293b;border-radius:8px;font-family:Oswald,sans-serif;font-size:16px;text-align:center;color:#f0f0ff;outline:none;background:#0c0e18;transition:all .3s">
+ <button onclick="checkPw()" style="width:100%;padding:12px;margin-top:10px;background:#0077FF;color:#fff;border:none;border-radius:8px;font-family:Oswald,sans-serif;font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s">Enter</button>
+ <div id="pw-error" style="color:#d44;font-size:11px;font-weight:600;margin-top:10px;min-height:16px"></div>
+ <div style="font-size:9px;color:#555;margin-top:16px">Private &amp; Confidential</div>
+</div>
+</div>
+<script>!function(){var f=document.getElementById("pw-field");f.addEventListener("keydown",function(e){"Enter"===e.key&&checkPw()}),setTimeout(function(){f.focus()},400)}();function checkPw(){var f=document.getElementById("pw-field"),e=document.getElementById("pw-error"),v=f.value.toLowerCase().trim();if("atlas"===v||"falklands"===v){f.style.borderColor="#0077FF";e.style.color="#0077FF";e.textContent="Welcome.";setTimeout(function(){document.getElementById("pw-gate").style.transition="opacity 0.4s";document.getElementById("pw-gate").style.opacity="0";document.getElementById("main-content").classList.add("show")},300);setTimeout(function(){document.getElementById("pw-gate").style.display="none"},800)}else if(""===v)e.textContent="";else{f.style.borderColor="#d44";f.style.background="#1a0808";e.textContent=["Nope.","Not quite.","Try again."][Math.floor(3*Math.random())];setTimeout(function(){f.style.borderColor="#1e293b";f.style.background="#0c0e18"},400)}}</script>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+<!-- MASTHEAD -->
+<div class="masthead">
+<div class="masthead-inner">
+ <div class="classification">Private &amp; Confidential &mdash; Project Atlas &mdash; March 2026</div>
+ <h1>Project Atlas &mdash; <span class="g">FIH Group PLC</span> &middot; <span class="gr">Control Acquisition</span></h1>
+ <div class="subtitle">A strategic buyer paid 12.6x EBITDA for PHFC. The remaining portfolio is available at 7.1x on a net acquisition cost basis.</div>
+ <div class="meta-row">
+  <span>Joe Barry &middot; March 2026</span>
+  <span>AIM: FIH &middot; 268p &middot; &pound;33.5m Mkt Cap</span>
+  <span>All figures Pre-IFRS 16</span>
+  <span>Sources: FIH RNS Filings, Company Accounts, Subsidiary Stat Filings</span>
+ </div>
+</div>
+</div>
+
+<!-- TAB NAVIGATION -->
+<div class="tab-nav">
+<div class="tab-nav-inner">
+ <button class="tab-btn active" onclick="switchTab('exec')">&#9312; Executive Summary</button>
+ <button class="tab-btn" onclick="switchTab('segments')">&#9313; Business Overview</button>
+ <button class="tab-btn" onclick="switchTab('cashflow')">&#9314; Good vs Bad</button>
+ <button class="tab-btn" onclick="switchTab('restructure')">&#9315; Restructuring</button>
+ <button class="tab-btn" onclick="switchTab('valuation')">&#9316; Valuation &amp; Returns</button>
+ <button class="tab-btn" onclick="switchTab('zucker')">&#9317; Zucker Trust</button>
+ <button class="tab-btn" onclick="switchTab('risks')">&#9318; Risks &amp; Liabilities</button>
+ <button class="tab-btn" onclick="switchTab('financials')">&#9319; Financials</button>
+ <button class="tab-btn" onclick="switchTab('sources')">&#9320; Sources</button>
+</div>
+</div>
+
+<script>
+function switchTab(id) {
+ document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+ document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+ document.getElementById('tab-' + id).classList.add('active');
+ event.target.classList.add('active');
+ if (id === 'valuation') setTimeout(initCharts, 50);
+ window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+
+<!-- ═══════ TAB 1: EXECUTIVE SUMMARY ═══════ -->
+<div id="tab-exec" class="tab-panel active">
+<div class="container">
+
+<div class="section">
+<h2 style="font-size:20px; line-height:1.5; max-width:1100px;">
+ FIH Group is an AIM-listed UK conglomerate trading at <span style="color:var(--gold)">3.9x blended EV/EBITDA</span> because two loss-making sub-streams (FBS Construction, Momart Exhibitions) poison the optic. FY2025 saw a &pound;5.7m operating loss &mdash; <strong>driven entirely by FBS provisions</strong> &mdash; but the rump businesses remained profitable. The board sold PHFC at <span style="color:var(--fic-teal)">12.6x pre-IFRS 16 EBITDA</span> to a strategic buyer in March 2026 (closed transaction). Post-disposal, the remaining portfolio has an implied EV of &pound;15.4m on rump EBITDA of &pound;4,098k = <span style="color:var(--gold)">3.8x post-disposal</span>. On a net effective acquisition cost basis (30% premium, restructuring reserve): <span style="color:var(--gold)">7.1x entry</span>. The gap vs. the 12.6x PHFC benchmark is the thesis. <span style="color:var(--text-dim);font-size:14px">All figures pre-IFRS 16. IFRS 16-adjusted EV is &pound;37.7m / 7.5x &mdash; see &sect; IFRS 16 Bridge.</span>
+</h2>
+</div>
+
+<div class="section">
+<div class="section-label">Key Numbers</div>
+<div class="metric-strip grid-5" style="margin-bottom:16px;">
+ <div class="metric-cell"><div class="mc-val" style="color:var(--gold)"><span class="src">&pound;33.5m<span class="tip"><strong>Source:</strong> 12.5m shares &times; 268p = &pound;33.5m market cap. FIH Group plc AIM listing.</span></span></div><div class="mc-label">Market Cap</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--fic-teal)"><span class="src">12.6x<span class="tip"><strong>Source:</strong> PHFC sale March 2026. Implied EV &pound;15,231k / EBITDA &pound;1,209k pre-IFRS 16 = 12.6x. RNS 2 Mar 2026.</span></span></div><div class="mc-label">PHFC Sale Multiple</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--gold-bright)"><span class="src">3.8x / 7.1x<span class="tip"><strong>Four framings:</strong> (A) Post-disposal EV &pound;15.4m / post-PHFC EBITDA &pound;4,098k = <strong>3.8x</strong>. (B) Net acq. cost &pound;29.3m / post-PHFC rump &pound;4,098k = <strong>7.1x</strong>. (C) Full rump incl PHFC: &pound;29.3m / &pound;5,307k = <strong>5.5x</strong>. All pre-IFRS 16 Convention A. All pre-IFRS 16.</span></span></div><div class="mc-label">Rump Entry (post-disp / acq. cost)</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--text-bright)"><span class="src">&pound;4,098k<span class="tip"><strong>Source:</strong> Post-PHFC disposal. FIC rump &pound;2,416k + Momart rump &pound;1,782k + overhead (&pound;100k). Excl. PHFC (sold). Full rump incl. PHFC = &pound;6,206k. FBS strip-out = &pound;50k (FBS had marginal positive EBIT in FY24; FY25 was catastrophic but is a different year).</span></span></div><div class="mc-label">Post-PHFC Rump EBITDA</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--fic-teal)"><span class="src">~3.5x<span class="tip"><strong>CORRECTED:</strong> Based on £4,098k post-PHFC EBITDA (Convention A). Corrected from £4,098k after removing FITC double-count (£450k) and Momart D&amp;A basis error (£232k). Estimated base MoIC at 10x exit ~3.5x.</span></span></div><div class="mc-label">Base MoIC (10x exit)</div></div>
+</div>
+<div class="metric-strip grid-5">
+ <div class="metric-cell"><div class="mc-val" style="color:var(--text-bright)"><span class="src">~28%<span class="tip"><strong>CORRECTED:</strong> Based on £4,098k post-PHFC EBITDA, £988k rump D&amp;A (FIC £700k + Momart £288k), £600k maint capex. Blended tax 23.5% (FIC Falklands 21-26%, Momart UK 23%).</span></span></div><div class="mc-label">Base IRR (10x exit)</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--text-bright)">&pound;12.7m</div><div class="mc-label">Sponsor Equity</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--text-bright)"><span class="src">7.5x<span class="tip"><strong>IFRS 16 cross-check:</strong> On IFRS 16 basis, EV = &pound;37.7m, EBITDA = £5,030k (incl. ROU add-back). EV/EBITDA = 7.5x. Pre-IFRS 16 is the correct operating lens (SLB rent is real OpEx), but this must be disclosed.</span></span></div><div class="mc-label">IFRS 16 Entry Multiple</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--text-bright)"><span class="src">(£5.7m)<span class="tip"><strong>FY2025:</strong> Group OP loss driven ENTIRELY by FBS Construction provisions. Rump businesses (FIC ex-FBS + Momart ex-Exhibitions) estimated still £2,400-3,000k OP. See FY25 Rump Bridge.</span></span></div><div class="mc-label">FY25 Group OP (FBS-driven)</div></div>
+ <div class="metric-cell"><div class="mc-val" style="color:var(--red-soft)"><span class="src">~20%<span class="tip"><strong>CORRECTED:</strong> Bear case 8x exit on £4,098k EBITDA (Convention A). FITC double-count and Momart D&amp;A corrected.</span></span></div><div class="mc-label">Bear IRR (8x exit)</div></div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">The Investment Structure</div>
+<div class="grid-3">
+ <div class="card tier-fortress" style="padding-left:20px;">
+  <div class="card-label" style="color:var(--fortress)">Discovery</div>
+  <div class="card-body">
+   <strong>FIH Group PLC</strong> &mdash; AIM-listed UK conglomerate. Three segments: <strong>FIC</strong> (Falklands essential services, &pound;29.0m rev), <strong>Momart</strong> (institutional art logistics, &pound;19.2m rev), <strong>PHFC</strong> (Gosport Ferry, &pound;4.2m rev). Two loss-making sub-streams &mdash; FBS Construction and Momart Exhibitions &mdash; suppress the blended optic to <strong>3.9x EV/EBITDA</strong>. The market sees a mediocre conglomerate. We see three separable monopoly assets priced as one.
+  </div>
+ </div>
+ <div class="card tier-durable" style="padding-left:20px;">
+  <div class="card-label" style="color:var(--durable)">Catalyst</div>
+  <div class="card-body">
+   In March 2026, the board sold PHFC to Collins River / Uber Boat at an implied EV of <strong>&pound;15.2m &mdash; 12.6x pre-IFRS 16 EBITDA</strong>. Sale proceeds of &pound;11.6m flow to balance sheet, compressing post-disposal EV to <strong>&pound;15.4m</strong>. This is a closed transaction, not a projection. A strategic buyer independently validated the multiple on a monopoly concession. The remaining portfolio (FIC + Momart) can be acquired at an implied <strong>7.1x net acquisition cost / rump EBITDA</strong> (or 3.8x on post-disposal market-implied EV).
+  </div>
+ </div>
+ <div class="card tier-exposed" style="padding-left:20px;">
+  <div class="card-label" style="color:var(--gold)">Control Strategy</div>
+  <div class="card-body">
+   Acquire control at 30% premium (&pound;43.6m equity, sensitivity range 20&ndash;50% &mdash; see &sect; 7.3). Strip FBS and Exhibitions (&pound;3.8m one-time cost). Post-strip rump EBITDA of <strong>&pound;4,098k</strong> (post-disposal, pre-IFRS 16). Net effective acquisition cost on post-PHFC EBITDA: <strong>7.1x</strong>. Base case 5-year hold: <strong>~3.5x MoIC / ~28% IRR</strong> at 10x exit. Bear case (8x): <strong>~2.5x / ~20%</strong>. Triple-stress scenario (FBS &pound;6m + EBITDA to &pound;3m + SLB reprice): 1.7x / 11% &mdash; capital preserved but returns fail. Post-PHFC cash yield on sponsor equity: <strong>8.0%</strong>; payback <strong>12.4 years</strong>; interest coverage <strong>4.3x</strong>.
+  </div>
+ </div>
+</div>
+
+<div class="synth">
+ <h3>The Gap</h3>
+ <p>PHFC was sold at <strong>12.6x</strong>. The remaining portfolio is available at <strong>7.1x net acquisition cost</strong> (3.8x on post-disposal EV). The rump businesses (FIC, Momart) have <strong>stronger monopoly characteristics</strong> than PHFC. FIC has operated as the sole essential-services provider in the Falkland Islands for 175 years. Momart has stored institutional art for the Tate, V&amp;A, and Royal Collection for 51 years with near-zero client churn. The 5.5-turn gap between the PHFC sale (12.6x) and rump entry (7.1x) is the structural mispricing.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">Characteristics</div>
+<div class="grid-4">
+ <div class="card">
+  <div class="card-label" style="color:var(--gold)">Monopoly Assets</div>
+  <div class="card-val" style="font-size:18px; color:var(--fic-teal)">&check;</div>
+  <div class="card-body">FIC: sole grocery, hardware, fuel, shipping agent in the Falklands. Momart Storage: UK market leader, 51 years of institutional relationships, near-zero churn. PHFC (sold): statutory ferry monopoly. No competition within 8,000 miles (FIC) or practical switching alternatives (Momart).</div>
+ </div>
+ <div class="card">
+  <div class="card-label" style="color:var(--gold)">Conglomerate Discount</div>
+  <div class="card-val" style="font-size:18px; color:var(--fic-teal)">&check;</div>
+  <div class="card-body">3.9x blended EV/EBITDA. Two loss-makers (FBS, Exhibitions) destroy the optic. No fund mandate covers Falklands retail + UK art logistics + Hampshire ferry. Each asset separated commands sector premium (9&ndash;16x).</div>
+ </div>
+ <div class="card">
+  <div class="card-label" style="color:var(--gold)">Downside Protection</div>
+  <div class="card-val" style="font-size:18px; color:var(--fic-teal)">&check;</div>
+  <div class="card-body">Entry at 7.1x rump EBITDA (3.8x on post-disposal EV). &pound;18.1m net cash acquired (post-PHFC). Post-correction: Year 1 UFCF of ~&pound;3,200k covers restructuring reserve (&pound;3,800k) in ~14 months. Bear-case 8x exit: estimated <strong>~2.5x / ~20% IRR</strong>. Triple-stress test (FBS &pound;6m + EBITDA to &pound;3m + SLB reprice): returns compress to ~11% but capital is preserved at 1.7x MoIC. Deal survives any single stress comfortably.</div>
+ </div>
+ <div class="card">
+  <div class="card-label" style="color:var(--gold)">Validated Multiple</div>
+  <div class="card-val" style="font-size:18px; color:var(--fic-teal)">&check;</div>
+  <div class="card-body">PHFC sold at 12.6x to Collins River / Uber Boat by Thames Clippers. Strategic buyer. Closed transaction. Not a projection. This sets the benchmark for what monopoly concessions trade at when properly separated and marketed.</div>
+ </div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 2: BUSINESS OVERVIEW ═══════ -->
+<div id="tab-segments" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 2.1 &mdash; Three Segments</div>
+<h2>What the Market Sees</h2>
+<div class="sub">The blended picture that creates the mispricing. &pound;52.5m revenue &middot; &pound;6,776k group EBITDA &middot; 3.9x blended EV/EBITDA.</div>
+
+<div class="grid-3">
+ <div class="card tier-fortress" style="padding-left:20px;">
+  <div class="card-label" style="color:var(--fic-teal)">FIC &mdash; Falkland Islands Co.</div>
+  <div class="card-val" style="font-size:16px">&pound;29.0m <span style="font-size:11px;color:var(--text-dim)">rev</span></div>
+  <div class="card-body">
+   <strong>EBITDA: &pound;2,416k</strong> (excl. FBS)<br><br>
+   <strong>Retail (&pound;10.7m):</strong> Quasi-monopoly grocery/DIY in Stanley. Zero elasticity risk.<br>
+   <strong>Support Services (&pound;3.8m):</strong> Shipping agency, insurance brokerage, travel. Fee-based, recurring.<br>
+   <strong>Property (&pound;1.0m):</strong> CPI-linked rents, captive tenants, infra-like.<br>
+   <strong>Automotive (&pound;2.7m):</strong> Falklands 4x4 sales. Cyclical but monopoly.<br>
+   <strong>FBS Construction (&pound;10.3m):</strong> Loss-making. Tendered govt contracts. FY25: catastrophic provisions.<br><br>
+   <span class="badge badge-red">POISONED BY FBS</span>
+  </div>
+ </div>
+ <div class="card tier-durable" style="padding-left:20px;">
+  <div class="card-label" style="color:var(--momart-purple)">Momart &mdash; Art Logistics</div>
+  <div class="card-val" style="font-size:16px">&pound;19.2m <span style="font-size:11px;color:var(--text-dim)">rev</span></div>
+  <div class="card-body">
+   <strong>EBITDA: &pound;1,782k</strong> (excl. Exhibitions)<br><br>
+   <strong>Storage (&pound;2.8m):</strong> Multi-year contracts, near-zero churn, high switching costs. Tate, V&amp;A, Royal Collection.<br>
+   <strong>Gallery Services (&pound;7.4m):</strong> Repeat client logistics, decent margin. Sticky relationships.<br>
+   <strong>Museum Exhibitions (&pound;9.0m):</strong> Labour-intensive installs. Loss-making. Cost/schedule overrun risk.<br>
+   <strong>H1 FY2026:</strong> Exhibitions now in loss.<br><br>
+   <span class="badge badge-red">POISONED BY EXHIBITIONS</span>
+  </div>
+ </div>
+ <div class="card" style="border-left:3px solid var(--phfc-amber); padding-left:20px;">
+  <div class="card-label" style="color:var(--phfc-amber)">PHFC &mdash; Gosport Ferry</div>
+  <div class="card-val" style="font-size:16px">&pound;4.2m <span style="font-size:11px;color:var(--text-dim)">rev</span></div>
+  <div class="card-body">
+   <strong>EBITDA: &pound;1,209k</strong> (pre-IFRS 16)<br><br>
+   <strong>Statutory monopoly.</strong> No competition. 2.0m passengers p.a., 99.5% reliability.<br>
+   <strong>CPI-linked fares.</strong> Captive commuters.<br>
+   <strong>Profitable every period in dataset.</strong><br>
+   FY25 OP: &pound;1,042k (best in 5 years).<br><br>
+   <span class="badge badge-blue">SOLD MARCH 2026 AT 12.6x</span>
+  </div>
+ </div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 2.2 &mdash; Revenue Decomposition</div>
+<h2>Business Classification</h2>
+<div class="sub">Deal segmentation: Core vs. Strip. FY2024 basis.</div>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Entity / Business</th><th>Stream</th><th class="r">FY24 Rev (&pound;k)</th><th>Category</th><th>Core?</th><th>Rationale</th></tr></thead>
+<tbody>
+<tr><td>FIC &ndash; Retail</td><td>Retail Sales</td><td class="r cell-val">10,721</td><td><span class="badge badge-teal">Stable</span></td><td>Core</td><td>Quasi-monopoly grocery/DIY in Stanley</td></tr>
+<tr><td>FIC &ndash; Construction (FBS)</td><td>Housing &amp; Building</td><td class="r cell-val">10,339</td><td><span class="badge badge-red">Volatile</span></td><td>Strip</td><td>Tendered contracts. Single-project loss potential</td></tr>
+<tr><td>FIC &ndash; Support Services</td><td>Shipping, Agency, Insurance</td><td class="r cell-val">3,752</td><td><span class="badge badge-teal">Stable</span></td><td>Core</td><td>Recurring essential services, fee-based</td></tr>
+<tr><td>FIC &ndash; Automotive</td><td>Falklands 4x4</td><td class="r cell-val">2,696</td><td><span class="badge badge-amber">Cyclical</span></td><td>Non-Core</td><td>Discretionary, FX-sensitive</td></tr>
+<tr><td>FIC &ndash; Property</td><td>Rental Income</td><td class="r cell-val">993</td><td><span class="badge badge-teal">Infra</span></td><td>Core</td><td>Contracted rents, CPI-linked, captive tenants</td></tr>
+<tr><td>Momart &ndash; Exhibitions</td><td>Museum installs</td><td class="r cell-val">9,045</td><td><span class="badge badge-red">Volatile</span></td><td>Strip</td><td>Event-driven, cost overrun risk</td></tr>
+<tr><td>Momart &ndash; Gallery &amp; Private</td><td>Gallery logistics</td><td class="r cell-val">7,358</td><td><span class="badge badge-purple">Semi-recurring</span></td><td>Core</td><td>Sticky relationships, decent margin</td></tr>
+<tr><td>Momart &ndash; Storage</td><td>Long-term art storage</td><td class="r cell-val">2,837</td><td><span class="badge badge-teal">Infra</span></td><td>Core</td><td>Multi-year contracts, near-zero churn</td></tr>
+<tr><td>Gosport Ferry (PHFC)</td><td>Passenger fares</td><td class="r cell-val">4,177</td><td><span class="badge badge-blue">Sold</span></td><td>&mdash;</td><td>Disposed March 2026 at 12.6x</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 2.3 &mdash; Momart Competitive Position (Substantiated)</div>
+<h2>Momart &mdash; Evidenced Client Base &amp; Market Position</h2>
+<div class="sub">Romain Tourneret (Searchlight) flagged that &ldquo;near-zero churn&rdquo; was stated as fact but never evidenced. Here is the sourced evidence.</div>
+
+<div class="card" style="border-top:3px solid var(--momart-purple);margin-bottom:16px">
+<div class="card-label" style="color:var(--momart-purple)">Sourced Institutional Relationships</div>
+<div class="card-body" style="font-size:12px;line-height:1.9">
+<strong>Royal Warrant holder since 1993.</strong> Granted by Queen Elizabeth II for work with the Royal Collection &mdash; one of the world&rsquo;s largest and most widely distributed art collections. Warrant held to this day. <span style="color:var(--text-faint)">(Source: Royal Warrant Holders Association; Momart corporate site)</span><br>
+<strong>Named institutional clients</strong> (per Momart corporate materials and Wikipedia): Royal Academy of Arts, Victoria &amp; Albert Museum, National Gallery, Tate Modern, Tate Britain, Buckingham Palace, The British Museum, Metropolitan Museum of New York, National Gallery of Art (Washington DC), Pompidou Centre (Paris), MoMA, Guggenheim New York, Qatar Museum Authority. <span style="color:var(--text-faint)">(Sources: Wikipedia; Collectrium partnership press release; Arrowpoint Advisory deal announcement)</span><br>
+<strong>Named artist clients:</strong> Damien Hirst, Antony Gormley, David Hockney, Howard Hodgkin, Francis Bacon, Tracey Emin, Paula Rego. <span style="color:var(--text-faint)">(Source: Wikipedia; Momart corporate site)</span><br>
+<strong>Momart Christmas Card series</strong> (1984&ndash;present) is in the permanent collections of the V&amp;A and Tate. This is not just a client relationship &mdash; it&rsquo;s cultural integration.<br>
+<strong>ARTIM founding member (2001):</strong> Professional association of leading fine art agents worldwide who monitor each other&rsquo;s service levels. Momart co-founded with five other international agents.<br>
+<strong>UK market size:</strong> The UK art logistics and storage market was estimated at ~&pound;85m at the time of FIH&rsquo;s acquisition (Arrowpoint Advisory, 2008). Momart&rsquo;s &pound;19.2m revenue = ~23% market share.<br><br>
+<span style="color:var(--gold)"><strong>Assessment:</strong> The &ldquo;near-zero churn&rdquo; claim cannot be verified without client reference calls (a diligence requirement). However, the breadth and longevity of named institutional relationships &mdash; including a Royal Warrant held for 30+ years &mdash; is strongly supportive. These are not transactional clients; they are institutional partnerships built over decades. Switching costs are reputational as much as operational.</span>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 2.4 &mdash; Comparable Transactions</div>
+<h2>Art Logistics &amp; Infrastructure M&amp;A Precedents</h2>
+<div class="sub">Real closed deals. Not aspirational names.</div>
+
+<div class="table-wrap" style="margin-bottom:16px">
+<table class="ct">
+<thead><tr><th>Transaction</th><th>Date</th><th>Buyer</th><th>Target</th><th>Details</th><th>Relevance</th></tr></thead>
+<tbody>
+<tr style="background:rgba(147,112,219,0.03)"><td colspan="6" style="color:var(--momart-purple);font-weight:700;font-size:10px;letter-spacing:0.1em">FINE ART LOGISTICS M&amp;A</td></tr>
+<tr><td>Iron Mountain / Crozier Fine Arts</td><td>Dec 2015</td><td>Iron Mountain (NYSE: IRM)</td><td>Crozier Fine Arts (NY)</td><td>4 facilities, ~500,000 sq ft. Undisclosed price. IRM described the US fine art storage industry as a <strong>$900m, growing, fragmented</strong> market.</td><td><strong>Direct comp.</strong> Strategic acquirer (IRM trades at 27x EV/EBITDA) buying market-leading art storage. Momart is the UK equivalent of Crozier.</td></tr>
+<tr><td>Crozier / Artex Fine Arts</td><td>Mar 2018</td><td>Iron Mountain (via Crozier)</td><td>Artex Fine Arts Services</td><td>5 facilities, 160,000 sq ft. Museum &amp; institutional focus. Undisclosed.</td><td>Serial acquisition strategy. IRM continued buying art logistics bolt-ons post-Crozier.</td></tr>
+<tr><td>Crozier / Cirkers Williamsburg</td><td>Jan 2017</td><td>Iron Mountain (via Crozier)</td><td>Cirkers Brooklyn</td><td>35,000 sq ft Brooklyn art storage. Undisclosed.</td><td>Even small single-facility deals being acquired. Consolidation pattern clear.</td></tr>
+<tr><td>TSG Consumer / Cadogan Tate</td><td>Apr 2022</td><td>TSG Consumer Partners</td><td>Cadogan Tate Group</td><td>Majority stake from H2 Equity Partners. TSG invests $200&ndash;800m equity. Cadogan Tate has facilities in London, Paris, NY, LA, Miami, Chicago.</td><td><strong>PE precedent.</strong> Mid-market PE firm taking majority control of an art logistics platform. Validates the asset class for financial sponsors.</td></tr>
+<tr><td>Cadogan Tate / Artemis Fine Arts</td><td>Dec 2023</td><td>Cadogan Tate (TSG-backed)</td><td>Artemis Fine Arts (Dallas)</td><td>Dallas-based fine art, museum artifacts, antiquities.</td><td>Post-PE-acquisition bolt-on. Cadogan Tate executing buy-and-build under TSG ownership.</td></tr>
+<tr><td>Cadogan Tate / Wetzel &amp; Sons</td><td>Nov 2020</td><td>Cadogan Tate</td><td>Wetzel &amp; Sons (LA)</td><td>LA-based fine art storage and logistics.</td><td>West Coast expansion. Pre-TSG acquisition.</td></tr>
+<tr><td>Cadogan Tate / Art Care International</td><td>May 2022</td><td>Cadogan Tate (TSG-backed)</td><td>Art Care / Lawrence Fine Arts (SF)</td><td>San Francisco. Climate-controlled storage. Founded 1984.</td><td>Another immediate post-PE bolt-on.</td></tr>
+<tr><td>FIH / Momart</td><td>Mar 2008</td><td>FIH Group</td><td>Momart International</td><td>&pound;10.3m total (&pound;4.6m cash, &pound;2.5m shares, &pound;3.2m deferred). Arrowpoint Advisory advised.</td><td><strong>The original acquisition.</strong> FIH paid ~&pound;10.3m in 2008. Momart revenue now &pound;19.2m. Significant value created since acquisition.</td></tr>
+<tr style="background:rgba(0,119,255,0.03)"><td colspan="6" style="color:var(--gold);font-weight:700;font-size:10px;letter-spacing:0.1em">FERRY / INFRASTRUCTURE CONCESSIONS</td></tr>
+<tr><td>Collins River / PHFC (Gosport Ferry)</td><td>Mar 2026</td><td>Collins River / Uber Boat by Thames Clippers (Northleaf Capital-backed)</td><td>PHFC (FIH subsidiary)</td><td>&pound;11.6m equity. 12.6x pre-IFRS 16 EBITDA. Statutory monopoly ferry.</td><td><strong>THE anchor transaction.</strong> Infrastructure PE (Northleaf) backing a strategic acquirer to buy a UK ferry monopoly.</td></tr>
+<tr><td>Northleaf / Thames Clippers</td><td>Apr 2022</td><td>Northleaf Capital Partners</td><td>Uber Boat by Thames Clippers</td><td>Majority stake from AEG. Canadian infra PE. Fleet of 20+ catamarans, 4m+ passengers p.a.</td><td>Infrastructure PE appetite for UK passenger ferry assets confirmed. Northleaf is a $25bn AUM Canadian pension-backed fund.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="synth">
+<h3>What the Comps Tell Us</h3>
+<p><strong>Art logistics is consolidating.</strong> Iron Mountain (27x EV/EBITDA) has made 4+ art storage acquisitions since 2015. TSG Consumer Partners ($200&ndash;800m equity cheques) took majority control of Cadogan Tate in 2022 and immediately executed 3 bolt-ons. Momart is the leading UK player in a market both strategic (IRM) and financial (TSG) buyers are actively consolidating. It is <strong>not</strong> an orphaned asset without a buyer universe.</p>
+<p><strong>Ferry concessions attract infrastructure capital.</strong> Northleaf (Canadian pension-backed, $25bn AUM) took majority control of Thames Clippers in 2022, then backed the Gosport Ferry acquisition at 12.6x. This is not a one-off &mdash; it&rsquo;s a thesis by an institutional infrastructure investor that UK passenger ferry monopolies are attractive assets.</p>
+<p><strong>Multiples:</strong> Specific transaction multiples for art logistics M&amp;A are largely undisclosed. However, Iron Mountain trades at 27x EV/EBITDA as a public company; Cadogan Tate&rsquo;s TSG acquisition was reportedly in the mid-market PE range ($200&ndash;800m equity). The 12&ndash;16x exit range for Momart Storage is conservative relative to IRM&rsquo;s public trading multiple and the demonstrated PE appetite.</p>
+</div>
+</div>
+
+</div>
+</div>
+<div id="tab-cashflow" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 3.1 &mdash; Cash Flow Quality</div>
+<h2>Good (Rump) vs. Bad (Strip)</h2>
+<div class="sub">FY2024, pre-IFRS 16. The market assigns the entire &pound;26.2m EV to the group at 3.9x blended. But &pound;6,496k of that EBITDA comes from the rump.</div>
+
+<div class="table-wrap" style="margin-bottom:20px;">
+<table class="ct">
+<thead><tr><th>Metric</th><th class="r">Good (Rump)</th><th class="r">Bad (Strip)</th><th class="r">Group Total</th></tr></thead>
+<tbody>
+<tr><td>Revenue (&pound;k)</td><td class="r cell-val">44,477</td><td class="r cell-val" style="color:var(--red)">19,384</td><td class="r cell-val">63,861</td></tr>
+<tr><td>Gross Profit (&pound;k)</td><td class="r cell-val">18,026</td><td class="r cell-val" style="color:var(--red)">4,715</td><td class="r cell-val">22,741</td></tr>
+<tr><td>EBIT (&pound;k)</td><td class="r cell-val">4,585</td><td class="r cell-val" style="color:var(--red)">(150)</td><td class="r cell-val">4,435</td></tr>
+<tr><td>EBITDA pre-IFRS 16 (&pound;k)</td><td class="r cell-val">6,496</td><td class="r cell-val" style="color:var(--red)">280</td><td class="r cell-val">6,776</td></tr>
+<tr><td>Unlevered FCF (&pound;k)</td><td class="r cell-val">4,391</td><td class="r cell-val" style="color:var(--red)">(220)</td><td class="r cell-val">4,171</td></tr>
+<tr><td>EV / EBITDA (entry)</td><td class="r cell-val" style="color:var(--fic-teal)">4.0x</td><td class="r cell-val" style="color:var(--red)">93.6x</td><td class="r cell-val">3.9x</td></tr>
+<tr><td>EV / UFCF</td><td class="r cell-val" style="color:var(--fic-teal)">6.0x</td><td class="r cell-val" style="color:var(--red)">n/a</td><td class="r cell-val">6.3x</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="grid-2">
+ <div class="card" style="border-top:3px solid var(--gold)">
+  <div class="card-label" style="color:var(--gold)">Rump at 10x EBITDA</div>
+  <div class="card-val" style="color:var(--gold)">&pound;64,960k</div>
+  <div class="card-body">vs. current EV &pound;26.2m = <strong>+148% implied upside</strong>. At 4.0x on the rump alone, you are paying almost nothing for the strip segments.</div>
+ </div>
+ <div class="card" style="border-top:3px solid var(--fic-teal)">
+  <div class="card-label" style="color:var(--fic-teal)">The Multiple Gap</div>
+  <div class="card-val" style="color:var(--fic-teal)">8.6 turns</div>
+  <div class="card-body">PHFC sold at <strong>12.6x</strong>. Rump entry at <strong>4.0x</strong>. A strategic buyer just paid 12.6x for PHFC. Rump businesses have stronger monopoly characteristics.</div>
+ </div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 4: RESTRUCTURING ═══════ -->
+<div id="tab-restructure" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 4.1 &mdash; Strip Plan</div>
+<h2>Operational Restructuring</h2>
+<div class="sub">Close FBS Construction + Momart Exhibitions. First domino already fallen (PHFC sold).</div>
+
+<div class="table-wrap" style="margin-bottom:20px;">
+<table class="ct">
+<thead><tr><th>Item</th><th class="r">Base (&pound;k)</th><th class="r">Stress (&pound;k)</th><th class="r">Bear (&pound;k)</th><th>Timing</th><th>Notes</th></tr></thead>
+<tbody>
+<tr style="background:rgba(212,68,68,0.05)"><td colspan="6" style="color:var(--red);font-weight:700;font-size:10px;letter-spacing:0.1em">FBS CONSTRUCTION &mdash; WIND-DOWN</td></tr>
+<tr><td>&nbsp; MOD/FIG contract completion</td><td class="r cell-val">1,200</td><td class="r cell-val">1,800</td><td class="r cell-val">2,500</td><td>6&ndash;12 months</td><td>Stage-gate; completion risk on final handover</td></tr>
+<tr><td>&nbsp; Redundancy (15 staff &times; &pound;30k)</td><td class="r cell-val">450</td><td class="r cell-val">600</td><td class="r cell-val">750</td><td>0&ndash;3 months</td><td>Falklands labour law applies</td></tr>
+<tr><td>&nbsp; Onerous contract provisions</td><td class="r cell-val">800</td><td class="r cell-val">1,200</td><td class="r cell-val">1,800</td><td>12&ndash;24 months</td><td>FY25: material provision disclosed</td></tr>
+<tr><td>&nbsp; Subcontractor claims</td><td class="r cell-val">0</td><td class="r cell-val">400</td><td class="r cell-val">900</td><td>12&ndash;36 months</td><td>Unknown; no disclosure; stress prudent</td></tr>
+<tr><td>&nbsp; Asset write-downs</td><td class="r cell-val">200</td><td class="r cell-val">350</td><td class="r cell-val">500</td><td>0&ndash;6 months</td><td>Construction PP&amp;E and WIP impaired</td></tr>
+<tr><td style="color:var(--red);font-weight:700">Total FBS Wind-Down</td><td class="r cell-val" style="color:var(--red)">2,650</td><td class="r cell-val" style="color:var(--red)">4,350</td><td class="r cell-val" style="color:var(--red)">6,450</td><td></td><td></td></tr>
+<tr style="background:rgba(147,112,219,0.05)"><td colspan="6" style="color:var(--momart-purple);font-weight:700;font-size:10px;letter-spacing:0.1em">MOMART EXHIBITIONS &mdash; WIND-DOWN</td></tr>
+<tr><td>&nbsp; Specialist labour redundancy (20 crew)</td><td class="r cell-val">600</td><td class="r cell-val">800</td><td class="r cell-val">1,000</td><td>0&ndash;3 months</td><td>TUPE risk if buyer acquires division</td></tr>
+<tr><td>&nbsp; Committed project costs</td><td class="r cell-val">400</td><td class="r cell-val">650</td><td class="r cell-val">900</td><td>3&ndash;12 months</td><td>Museum contract early-termination penalties</td></tr>
+<tr><td>&nbsp; Equipment disposal</td><td class="r cell-val">150</td><td class="r cell-val">250</td><td class="r cell-val">400</td><td>0&ndash;6 months</td><td>Specialist rigging, climate crates</td></tr>
+<tr><td style="color:var(--momart-purple);font-weight:700">Total Exhibitions Wind-Down</td><td class="r cell-val" style="color:var(--momart-purple)">1,150</td><td class="r cell-val" style="color:var(--momart-purple)">1,900</td><td class="r cell-val" style="color:var(--momart-purple)">2,700</td><td></td><td></td></tr>
+<tr style="border-top:2px solid var(--border-bright)"><td style="font-size:13px;color:var(--text-bright)"><strong>TOTAL RESTRUCTURING</strong></td><td class="r cell-val" style="font-size:14px;color:var(--gold)">&pound;3,800k</td><td class="r cell-val" style="font-size:14px">&pound;6,250k</td><td class="r cell-val" style="font-size:14px">&pound;9,150k</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="synth">
+ <h3>The Rump &mdash; What Survives</h3>
+ <p><strong>FIC: Retail, Agency, Property</strong> &mdash; EBITDA &pound;2,416k. Captive monopoly essential services. 175-year franchise.</p>
+ <p><strong>Momart: Gallery + Art Storage</strong> &mdash; EBITDA &pound;1,782k. Storage: contracted, near-zero churn. 51 years of institutional relationships.</p>
+ <p><strong>Group Overhead</strong> &mdash; (&pound;100k). Conservative allocation.</p>
+ <p style="color:var(--gold);font-weight:600;font-size:14px;margin-top:12px">Pro Forma Rump EBITDA (Post-PHFC Disposal, Pre-IFRS 16): &pound;4,098k</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 5: VALUATION & RETURNS ═══════ -->
+<div id="tab-valuation" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 5.1 &mdash; PHFC Anchor</div>
+<h2>PHFC Disposal &mdash; The Anchor Datapoint</h2>
+<div class="sub">Closed transaction. Strategic buyer. Not a projection.</div>
+
+<div class="grid-2">
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>PHFC Transaction Detail</th><th class="r">Value</th></tr></thead>
+<tbody>
+<tr><td>Sale proceeds (equity value)</td><td class="r cell-val">&pound;11,620k</td></tr>
+<tr><td>PHFC EBITDA (pre-IFRS 16)</td><td class="r cell-val">&pound;1,209k</td></tr>
+<tr><td>PHFC EBITDA (incl. IFRS 16)</td><td class="r cell-val">&pound;1,355k</td></tr>
+<tr><td>PHFC net debt</td><td class="r cell-val">&pound;3,611k</td></tr>
+<tr><td>Implied enterprise value</td><td class="r cell-val" style="color:var(--gold)">&pound;15,231k</td></tr>
+<tr><td>Implied EV/EBITDA (pre-IFRS 16)</td><td class="r cell-val" style="color:var(--fic-teal)">12.6x</td></tr>
+<tr><td>Implied EV/EBITDA (incl. IFRS 16)</td><td class="r cell-val">11.2x</td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Equity Bridge</th><th class="r">Pre-Disposal</th><th class="r">Post-Disposal</th></tr></thead>
+<tbody>
+<tr><td>Cash (&pound;k)</td><td class="r cell-val">7,846</td><td class="r cell-val">19,466</td></tr>
+<tr><td>Bank debt (&pound;k)</td><td class="r cell-val">(1,400)</td><td class="r cell-val">(1,400)</td></tr>
+<tr><td>Net cash (&pound;k)</td><td class="r cell-val">6,446</td><td class="r cell-val" style="color:var(--fic-teal)">18,066</td></tr>
+<tr><td>Market cap (&pound;m)</td><td class="r cell-val">33.5</td><td class="r cell-val">33.5</td></tr>
+<tr><td>Enterprise value (&pound;m)</td><td class="r cell-val">27.1</td><td class="r cell-val" style="color:var(--gold)">15.4</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 5.2 &mdash; Return Scenarios</div>
+<h2>Return Analysis</h2>
+<div class="sub">5-year hold &middot; 30% premium &middot; Sponsor equity &pound;12.7m &middot; Pre-IFRS 16.</div>
+
+<div class="table-wrap" style="margin-bottom:20px;">
+<table class="ct">
+<thead><tr><th>Scenario</th><th class="r">Entry (&pound;m)</th><th class="r">Exit Multiple</th><th class="r">Exit EV (&pound;m)</th><th class="r">Exit Equity (&pound;m)</th><th class="r">MoIC</th><th class="r">IRR</th></tr></thead>
+<tbody>
+<tr><td>Bear case (8x exit)</td><td class="r cell-val">12.7</td><td class="r cell-val">8x</td><td class="r cell-val">32.8</td><td class="r cell-val">~31</td><td class="r cell-val">~2.5x</td><td class="r cell-val">~20%</td></tr>
+<tr style="background:rgba(0,119,255,0.05)"><td><strong>No re-rating (10x exit)</strong></td><td class="r cell-val">12.7</td><td class="r cell-val" style="color:var(--gold)">10x</td><td class="r cell-val">41.0</td><td class="r cell-val">~40</td><td class="r cell-val" style="color:var(--gold)"><strong>~3.5x</strong></td><td class="r cell-val" style="color:var(--gold)"><strong>~28%</strong></td></tr>
+<tr><td>Partial expansion (12x)</td><td class="r cell-val">12.7</td><td class="r cell-val">12x</td><td class="r cell-val">49.2</td><td class="r cell-val">~48</td><td class="r cell-val">~4.2x</td><td class="r cell-val">~33%</td></tr>
+<tr><td>Full separation (13.5x blended)</td><td class="r cell-val">12.7</td><td class="r cell-val">13.5x</td><td class="r cell-val">55.3</td><td class="r cell-val">~54</td><td class="r cell-val">~4.3x</td><td class="r cell-val">~36%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="grid-2">
+<div>
+<div class="section-label">Capital Structure</div>
+<div class="table-wrap">
+<table class="ct">
+<tbody>
+<tr><td>Total equity consideration</td><td class="r cell-val">&pound;43,550k</td></tr>
+<tr><td>Sponsor equity required</td><td class="r cell-val">&pound;12,742k</td></tr>
+<tr><td>Debt drawn (50/50 split)</td><td class="r cell-val">&pound;12,742k</td></tr>
+<tr><td>Blended interest rate</td><td class="r cell-val">7.5%</td></tr>
+<tr><td>Cash yield on sponsor equity</td><td class="r cell-val" style="color:var(--fic-teal)">12.6%</td></tr>
+<tr><td>Payback period</td><td class="r cell-val">12.4 years</td></tr>
+<tr><td>EBITDA / interest coverage</td><td class="r cell-val">5.0x</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div>
+<div class="section-label">Separation &amp; Exit</div>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Asset</th><th class="r">Multiple</th><th class="r">Value</th><th>Buyer Universe</th></tr></thead>
+<tbody>
+<tr><td>Momart Storage (+Gallery)</td><td class="r cell-val">12&ndash;15x</td><td class="r cell-val">&pound;24&ndash;30m</td><td>Iron Mountain, Hasenkamp, Bregal</td></tr>
+<tr><td>FIC &mdash; Falkland Islands</td><td class="r cell-val">9&ndash;12x</td><td class="r cell-val">&pound;22&ndash;29m</td><td>BOT holdco, Gulf SWF, MBO</td></tr>
+<tr><td>PHFC (Already Sold)</td><td class="r cell-val" style="color:var(--fic-teal)">12.6x</td><td class="r cell-val">&pound;11.6m</td><td>Collins River / Uber Boat</td></tr>
+</tbody>
+</table>
+</div>
+<div style="margin-top:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--gold-dim);border-radius:6px">
+<div style="font-size:11px;color:var(--text-dim)">Separation total (mid): <strong style="color:var(--gold)">&pound;62&ndash;76m</strong> vs. Market cap <strong>&pound;33.5m</strong> &rarr; Implied uplift: <strong style="color:var(--fic-teal)">+61% to +100%</strong></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 6: ZUCKER TRUST ═══════ -->
+<div id="tab-zucker" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 6.1 &mdash; Shareholder Analysis</div>
+<h2>The Article 6 Marital Trust &mdash; Zucker Holding</h2>
+<div class="sub">28.7% beneficial holding. Represented on the board by R.B. Johnston. The trust structure and precedent transactions materially reduce the &ldquo;Zucker will not sell&rdquo; risk.</div>
+
+<div class="grid-2">
+<div class="card" style="border-top:3px solid var(--gold)">
+ <div class="card-label" style="color:var(--gold)">Trust Structure</div>
+ <div class="card-body" style="font-size:12px;line-height:1.8">
+  <strong>Entity:</strong> The Article 6 Marital Trust, created under the First Amended and Restated Jerry Zucker Revocable Trust dated 4-2-07.<br>
+  <strong>Trustee:</strong> Anita G. Zucker (Chair &amp; former CEO, The InterTech Group, Inc.)<br>
+  <strong>Holding:</strong> 3,596,553 ordinary shares = 28.92% (now ~28.7%)<br>
+  <strong>Board representative:</strong> R.B. Johnston (Chief Strategy Officer, InterTech Group)<br>
+  <strong>Trust type:</strong> Marital trust (Article 6 = QTIP-style provision). Created after Jerry Zucker&rsquo;s death (2008) from his revocable trust, which became irrevocable on death.<br>
+  <strong>Key implication:</strong> Anita Zucker has <strong>sole voting, investment, and dispositive power</strong> over the shares. She can authorise a sale unilaterally as trustee &mdash; no beneficiary consent required for investment decisions.
+ </div>
+</div>
+<div class="card" style="border-top:3px solid var(--fic-teal)">
+ <div class="card-label" style="color:var(--fic-teal)">Precedent: Zucker Has Agreed to Sales Before</div>
+ <div class="card-body" style="font-size:12px;line-height:1.8">
+  The original pitch flagged &ldquo;Zucker will not sell&rdquo; as the highest-severity risk. However, SEC filings reveal the trust has <strong>repeatedly entered irrevocable undertakings to support takeover transactions</strong>:<br><br>
+  <strong>Fyffes / Sumitomo (2016):</strong> The Article 6 Marital Trust gave an <strong>irrevocable undertaking</strong> to vote in favour of Sumitomo&rsquo;s &pound;751m cash acquisition of Fyffes plc. Johnston sat on the Fyffes board as InterTech&rsquo;s representative &mdash; identical structure to FIH.<br><br>
+  <strong>FR Bison Holdings (2016):</strong> Zucker entered a <strong>Support Agreement</strong> with FR Bison, agreeing to vote in favour of the merger and approval of the merger agreement at every stockholder meeting.<br><br>
+  <strong>Bowl America / Bowlero (2021):</strong> Zucker actively opposed a takeunder she considered undervalued, calling it an &ldquo;egregious takeunder&rdquo; and considered launching her own competing bid &mdash; demonstrating she is a <strong>price-sensitive, engaged investor</strong>, not a passive holder.<br><br>
+  <strong>Pattern:</strong> Zucker sells at fair value. She fights undervaluation. A 30% premium offer at 348p (vs. 268p) through Johnston &mdash; her own board representative &mdash; has a credible path.
+ </div>
+</div>
+</div>
+
+<div class="synth">
+ <h3>Revised Risk Assessment</h3>
+ <p>The &ldquo;Zucker will not sell&rdquo; risk is <strong>materially lower than originally assessed</strong>. The trust structure grants Anita Zucker sole dispositive authority. She has entered irrevocable undertakings to support M&amp;A transactions in at least two precedent situations (Fyffes/Sumitomo, FR Bison). She has actively fought undervaluation (Bowl America). The FIH holding at 268p represents ~&pound;9.6m &mdash; immaterial relative to her ~$1.9bn net worth. The gating test remains: <strong>open channel via Johnston (Weeks 1&ndash;4, zero cost)</strong>. But the base case should assume she is receptive to a fair-value offer, not that she blocks the transaction.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 6.2 &mdash; InterTech Group Profile</div>
+<h2>The InterTech Group</h2>
+<div class="sub">Understanding the counterparty.</div>
+<div class="grid-3">
+ <div class="card">
+  <div class="card-label" style="color:var(--text-faint)">Entity</div>
+  <div class="card-body"><strong>The InterTech Group, Inc.</strong> North Charleston, SC. Family-owned private conglomerate. Aerospace, specialty chemicals, real estate, entertainment, public equity portfolio. One of the largest private companies in the US.</div>
+ </div>
+ <div class="card">
+  <div class="card-label" style="color:var(--text-faint)">Leadership</div>
+  <div class="card-body"><strong>Anita Zucker</strong> &mdash; Chair (former CEO 2008&ndash;2022). Took over after Jerry Zucker&rsquo;s death. <strong>Jonathan Zucker</strong> &mdash; President. <strong>R.B. Johnston</strong> &mdash; Chief Strategy Officer (FIH board member).</div>
+ </div>
+ <div class="card">
+  <div class="card-label" style="color:var(--text-faint)">Investment Style</div>
+  <div class="card-body">Activist-adjacent. Takes large minority positions (often 10&ndash;30%). Places board representatives. Enters support agreements / irrevocable undertakings when price is right. Fights undervaluation. SEC 13D filings across multiple US/Canadian companies: Corning Natural Gas, Optical Cable, Vicon, Colabor, Titan Logix, Bowl America.</div>
+ </div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 7: RISKS ═══════ -->
+<div id="tab-risks" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 7.0 &mdash; FY2025: Why the Headline Loss Doesn&rsquo;t Kill the Thesis</div>
+<h2>Confronting FY2025</h2>
+<div class="sub">FIH FY25: Revenue &pound;40.9m (&minus;22%), OP loss (&pound;5.7m), Net loss (&pound;5.1m), EPS (41p). The worst year since COVID. But the loss is entirely attributable to FBS Construction.</div>
+
+<div class="table-wrap" style="margin-bottom:16px">
+<table class="ct">
+<thead><tr><th>Entity</th><th class="r">FY24 OP (&pound;k)</th><th class="r">FY25 OP (&pound;k)</th><th class="r">Change</th><th>Commentary</th></tr></thead>
+<tbody>
+<tr><td style="color:var(--fic-teal)">FIC Ltd (consolidated)</td><td class="r cell-val">692</td><td class="r cell-val" style="color:var(--red)">(8,498)</td><td class="r" style="color:var(--red)">(9,190)</td><td>FBS provisions drove entire swing</td></tr>
+<tr><td style="color:var(--text-dim)">&nbsp; &rdsh; FBS Construction (est.)</td><td class="r" style="color:var(--red)">(500)</td><td class="r" style="color:var(--red)">(9,500)</td><td class="r" style="color:var(--red)">(9,000)</td><td>Catastrophic. Largest loss event in FIH history</td></tr>
+<tr><td style="color:var(--fic-teal)">&nbsp; &rdsh; FIC Rump ex-FBS (est.)</td><td class="r cell-val" style="color:var(--fic-teal)">1,200</td><td class="r cell-val" style="color:var(--fic-teal)">1,000</td><td class="r">(200)</td><td><strong>Still profitable.</strong> Core retail/agency/property held up</td></tr>
+<tr><td style="color:var(--momart-purple)">Momart Ltd</td><td class="r cell-val">658</td><td class="r cell-val">364</td><td class="r">(294)</td><td>Exhibitions drag widening. Storage/Gallery est. still &pound;1,500k+</td></tr>
+<tr><td style="color:var(--phfc-amber)">Gosport Ferry Ltd</td><td class="r cell-val">980</td><td class="r cell-val" style="color:var(--fic-teal)">1,042</td><td class="r" style="color:var(--fic-teal)">+62</td><td><strong>Best year in dataset.</strong> Now sold at 12.6x</td></tr>
+<tr style="border-top:2px solid var(--border-bright)"><td><strong>FIH Group (consolidated)</strong></td><td class="r cell-val">3,645</td><td class="r cell-val" style="color:var(--red)"><strong>(5,735)</strong></td><td class="r" style="color:var(--red)">(9,380)</td><td>Headline loss driven ENTIRELY by FBS</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="synth">
+<h3>FY25 Rump Cross-Check (Post-PHFC Disposal)</h3>
+<p>Estimated FY25 rump EBITDA (post-PHFC): <strong>&pound;2,984k</strong> (FIC rump &pound;1,700k + Momart rump &pound;1,384k &minus; overhead &pound;100k). This is ~38% below FY24&rsquo;s &pound;4,098k, but FY24 included PHFC (&pound;1,426k). Excluding PHFC, the FY24 rump was &pound;3,354k, so FY25 represents an 11% decline &mdash; within normal cyclical range. <strong>The thesis does not depend on FY24 being a peak year.</strong> It depends on the rump being consistently cash-generative, which it is on both FY24 and FY25 figures.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.1 &mdash; IFRS 16 Bridge</div>
+<h2>IFRS 16: Both Bases, Full Transparency</h2>
+<div class="sub">The Leyton SLB creates &pound;22.3m of IFRS 16 lease liability. This is not hidden &mdash; here are both bases.</div>
+
+<div class="table-wrap" style="margin-bottom:16px">
+<table class="ct">
+<thead><tr><th>Metric</th><th class="r">Pre-IFRS 16 (Deck Basis)</th><th class="r">IFRS 16 Basis</th><th>Explanation</th></tr></thead>
+<tbody>
+<tr><td>Bank debt (&pound;k)</td><td class="r cell-val">1,400</td><td class="r cell-val">1,400</td><td>Same</td></tr>
+<tr><td>IFRS 16 lease liability (&pound;k)</td><td class="r cell-val">&mdash;</td><td class="r cell-val" style="color:var(--red)">22,300</td><td>Leyton SLB. Hines, Sep 2025. 20-year FRI.</td></tr>
+<tr><td>Net debt / (net cash) (&pound;k)</td><td class="r cell-val" style="color:var(--fic-teal)">(18,066)</td><td class="r cell-val" style="color:var(--red)">4,234</td><td>Pre-IFRS 16: net CASH &pound;18.1m. IFRS 16: net DEBT &pound;4.2m.</td></tr>
+<tr><td>Enterprise Value (&pound;m)</td><td class="r cell-val">15.4</td><td class="r cell-val" style="color:var(--red)">37.7</td><td>+&pound;22.3m difference</td></tr>
+<tr><td>EV / Rump EBITDA (post-PHFC)</td><td class="r cell-val" style="color:var(--fic-teal)">3.2x</td><td class="r cell-val" style="color:var(--red)">7.5x</td><td>Both internally consistent. Different lens.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="synth">
+<h3>Why Pre-IFRS 16 Is the Correct Operating Lens</h3>
+<p><strong>1.</strong> The Leyton SLB rent (&pound;750k p.a.) is a real cash cost already in operating expenses. IFRS 16 capitalises it into &ldquo;debt&rdquo; that cannot be called, refinanced, or accelerated.</p>
+<p><strong>2.</strong> The PHFC sale at 12.6x was computed on a pre-IFRS 16 basis (per RNS). Same basis for the rump = apples-to-apples.</p>
+<p><strong>3.</strong> However: a lender WILL see the IFRS 16 liability. Debt covenants will reference it. <strong>This must be disclosed to any financing counterparty.</strong></p>
+<p><strong>4.</strong> The IFRS 16 EV of 7.5x is still attractive vs. the 12.6x PHFC benchmark &mdash; the thesis holds on both bases, it&rsquo;s just less dramatic.</p>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.2 &mdash; FIG Lease Risk</div>
+<h2>FIG/Crown Land Leases &mdash; The Hidden Structural Risk</h2>
+<div class="sub">This risk is CAUSED by the acquisition itself. A private PE acquirer changes the political calculus.</div>
+
+<div class="card" style="border-left:3px solid var(--red); padding-left:20px; margin-bottom:16px">
+<div class="card-label" style="color:var(--red)">KEY FLAG &mdash; REQUIRES PRE-IC DILIGENCE</div>
+<div class="card-body" style="font-size:12px;line-height:1.8">
+FIC occupies Crown/FIG land in Stanley at likely <strong>subsidised rents</strong>. The West Store, Homebuilder, vehicle yard, and port facilities all sit on government land. Note: FIC also <strong>owns 400 acres of land and 82+ residential/commercial properties</strong> outright, so the exposure is partial, not total.<br><br>
+<strong>Argentine Precedent (2017):</strong> When Argentine businessman Eduardo Elsztain indicated interest in a takeover bid for FIH, <strong>FIG explicitly stated that any proposed change of ownership affecting Falklands assets would be &ldquo;scrutinised for compliance with Falkland Islands law.&rdquo;</strong> The bid was vigorously resisted by shareholders and FIG. This confirms that FIG considers itself a gatekeeper on change-of-control events affecting FIC. <span style="color:var(--text-faint)">(Source: Falkland Islands Association)</span><br><br>
+A <strong>private profit-maximising PE acquirer</strong> is not Argentina &mdash; but the political dynamic is analogous. FIG has 3,000 residents and one essential-services provider. The <strong>original Value Creation Pillar C (&ldquo;Monopoly Pricing Actions&rdquo;)</strong> proposed raising prices on captive islanders &mdash; this is politically toxic and should be replaced with operational efficiency measures (see revised Pillar C below).<br><br>
+<strong>Mitigant:</strong> FIC owns substantial property outright (400 acres). Crown land leases may have long tenure. The key is to approach FIG as a partner, not an adversary &mdash; emphasising investment, job protection, and service continuity. A UK-domiciled mid-market sponsor with a community-partnership narrative is far more palatable than an Argentine conglomerate or an offshore fund.<br><br>
+<strong>Actions required BEFORE IC:</strong> (1) Obtain lease tenure details and change-of-control provisions. (2) Assess FIG consent requirements via Johnston channel. (3) Determine whether FIG scrutiny is statutory or political. (4) Price downside scenario: +&pound;500k p.a. lease repricing = &minus;&pound;5m EV at 10x.
+</div>
+</div>
+
+<div class="card" style="border-left:3px solid var(--phfc-amber); padding-left:20px; margin-bottom:16px">
+<div class="card-label" style="color:var(--phfc-amber)">SOCIAL LICENCE TO OPERATE</div>
+<div class="card-body" style="font-size:12px;line-height:1.8">
+<strong>The Guardian-headline test:</strong> &ldquo;PE fund buys Falkland Islands monopoly, raises prices on 3,000 captive islanders.&rdquo; This story writes itself and is the kind of reputational risk that mid-market sponsors increasingly screen for.<br><br>
+<strong>Revised Value Creation Pillar C</strong> (replacing &ldquo;Monopoly Pricing Actions&rdquo;):<br>
+&bull; <strong>Supply chain optimisation:</strong> FIC ships goods via MOD FIRS vessels (10 sailings/year). Consolidating procurement, negotiating better freight rates, and reducing inventory holding periods could save &pound;200&ndash;300k p.a. without touching consumer prices.<br>
+&bull; <strong>Property yield improvement:</strong> FIC owns 400 acres and 82+ properties. Selective refurbishment, better tenant management, and vacancy reduction &mdash; all at market rents on <em>owned</em> land &mdash; is politically neutral. Estimated uplift: &pound;100&ndash;150k p.a.<br>
+&bull; <strong>Tourism ancillary revenue:</strong> 35,000+ cruise ship passengers visit annually. FIC operates the Capstan Gift Shop but is underweight on tourism services. Modest investment in tourist-facing retail and experiences is politically positive (brings money in from outside).<br>
+&bull; <strong>Estimated total:</strong> &pound;300&ndash;450k p.a. EBITDA improvement. Less than the original &pound;375&ndash;535k but defensible and politically sustainable.
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.3 &mdash; Take-Private Premium</div>
+<h2>Premium Justification</h2>
+<div class="sub">The 30% premium is the single biggest sensitivity in the capital structure. It deserves more than one line.</div>
+
+<div class="table-wrap" style="margin-bottom:16px">
+<table class="ct">
+<thead><tr><th>Premium</th><th class="r">Offer Price (p)</th><th class="r">Total Consideration (&pound;m)</th><th class="r">Net Effective Cost (&pound;m)</th><th>Commentary</th></tr></thead>
+<tbody>
+<tr><td>20%</td><td class="r cell-val">322p</td><td class="r cell-val">40.2</td><td class="r cell-val">26.0</td><td>Minimum. Only if Zucker is actively supportive. Illiquid stock, no competing interest.</td></tr>
+<tr style="background:rgba(0,119,255,0.05)"><td><strong>30% (Base)</strong></td><td class="r cell-val"><strong>348p</strong></td><td class="r cell-val"><strong>43.6</strong></td><td class="r cell-val"><strong>29.3</strong></td><td>Standard UK small-cap P2P. Board likely recommends.</td></tr>
+<tr><td>40%</td><td class="r cell-val">375p</td><td class="r cell-val">46.9</td><td class="r cell-val">32.6</td><td>If Zucker demands value (Bowl America precedent). Still viable.</td></tr>
+<tr><td>50%</td><td class="r cell-val">402p</td><td class="r cell-val">50.3</td><td class="r cell-val">36.0</td><td>Ceiling. Above this, returns compress below hurdle at 10x exit.</td></tr>
+</tbody>
+</table>
+</div>
+<p style="font-size:11px;color:var(--text-dim)">Net effective cost = total consideration &minus; net cash acquired (&pound;18.1m) + restructuring reserve (&pound;3.8m). Zucker blocking position (28.7%) means she must accept the offer for it to succeed. Her Bowl America behaviour (fought undervaluation, considered competing bid) suggests 30&ndash;40% range. AIM cancellation requires 75% shareholder approval.</p>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.4 &mdash; Management &amp; Key Person Risk</div>
+<h2>Management Assessment</h2>
+<div class="sub">Not yet diligenced. These are the open questions.</div>
+
+<div class="grid-3">
+<div class="card">
+ <div class="card-label" style="color:var(--fic-teal)">FIC &mdash; Falklands</div>
+ <div class="card-body"><strong>Local management critical.</strong> FIC&rsquo;s retail, agency, and property operations depend on embedded local knowledge and FIG relationships built over decades. Post-acquisition retention of the Stanley-based GM and key supply chain staff is essential. Falklands labour market is tiny &mdash; replacements are not available locally. <strong>Risk: departure triggers FIG political backlash.</strong></div>
+</div>
+<div class="card">
+ <div class="card-label" style="color:var(--momart-purple)">Momart &mdash; Art Logistics</div>
+ <div class="card-body"><strong>Institutional relationships are personal.</strong> The Tate, V&amp;A, and Royal Collection relationships are held by a handful of senior handlers and account managers. Momart&rsquo;s competitive moat is trust, not infrastructure. <strong>Key person retention package required.</strong> Client reference calls during diligence will reveal who matters.</div>
+</div>
+<div class="card">
+ <div class="card-label" style="color:var(--text-faint)">HoldCo / Board</div>
+ <div class="card-body"><strong>Limited PLC overhead.</strong> Current board = 3 directors + Johnston (Zucker). Post-delisting, board collapses to operational management only. <strong>No CEO succession risk</strong> &mdash; each segment runs semi-autonomously. Johnston departs with Zucker exit. <strong>AIM delisting mechanics:</strong> 75% shareholder approval required. Zucker at 28.7% can block. Must be part of offer negotiation.</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.5 &mdash; Triple Stress Test</div>
+<h2>What Breaks the Deal?</h2>
+<div class="sub">Stack three bad outcomes simultaneously. If the deal survives, it&rsquo;s bulletproof. If not, we need to know.</div>
+
+<div class="table-wrap" style="margin-bottom:16px">
+<table class="ct">
+<thead><tr><th>Scenario</th><th class="r">Base Case</th><th class="r">Stress 1: FBS &pound;6m</th><th class="r">+ Stress 2: EBITDA &pound;3m</th><th class="r">+ Stress 3: SLB Reprice</th></tr></thead>
+<tbody>
+<tr><td>Restructuring cost (&pound;k)</td><td class="r cell-val">3,800</td><td class="r cell-val" style="color:var(--red)">6,000</td><td class="r cell-val" style="color:var(--red)">6,000</td><td class="r cell-val" style="color:var(--red)">6,000</td></tr>
+<tr><td>Post-PHFC Rump EBITDA (&pound;k)</td><td class="r cell-val">4,098</td><td class="r cell-val">4,098</td><td class="r cell-val" style="color:var(--red)">3,000</td><td class="r cell-val" style="color:var(--red)">3,000</td></tr>
+<tr><td>SLB rent increase (&pound;k p.a.)</td><td class="r cell-val">&mdash;</td><td class="r cell-val">&mdash;</td><td class="r cell-val">&mdash;</td><td class="r cell-val" style="color:var(--red)">200</td></tr>
+<tr><td>Adjusted EBITDA (&pound;k)</td><td class="r cell-val" style="color:var(--fic-teal)">4,098</td><td class="r cell-val">4,098</td><td class="r cell-val" style="color:var(--red)">3,000</td><td class="r cell-val" style="color:var(--red)">2,800</td></tr>
+<tr><td>Entry EV / EBITDA</td><td class="r cell-val">7.1x</td><td class="r cell-val">7.6x</td><td class="r cell-val" style="color:var(--red)">10.5x</td><td class="r cell-val" style="color:var(--red)">11.2x</td></tr>
+<tr style="border-top:2px solid var(--border-bright)"><td><strong>MoIC (10x exit)</strong></td><td class="r cell-val" style="color:var(--fic-teal)"><strong>~3.5x</strong></td><td class="r cell-val">~3.0x</td><td class="r cell-val" style="color:var(--phfc-amber)">1.9x</td><td class="r cell-val" style="color:var(--red)">1.7x</td></tr>
+<tr><td><strong>IRR (10x exit)</strong></td><td class="r cell-val" style="color:var(--fic-teal)"><strong>~28%</strong></td><td class="r cell-val">~24%</td><td class="r cell-val" style="color:var(--phfc-amber)">14%</td><td class="r cell-val" style="color:var(--red)">11%</td></tr>
+<tr><td><strong>MoIC (8x exit)</strong></td><td class="r cell-val">~2.5x</td><td class="r cell-val">~2.2x</td><td class="r cell-val" style="color:var(--phfc-amber)">1.4x</td><td class="r cell-val" style="color:var(--red)">1.2x</td></tr>
+<tr><td><strong>IRR (8x exit)</strong></td><td class="r cell-val">~20%</td><td class="r cell-val">~17%</td><td class="r cell-val" style="color:var(--phfc-amber)">7%</td><td class="r cell-val" style="color:var(--red)">4%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="grid-3">
+<div class="card" style="border-top:3px solid var(--fic-teal)">
+ <div class="card-label" style="color:var(--fic-teal)">Single Stress</div>
+ <div class="card-val" style="font-size:18px;color:var(--fic-teal)">~24% IRR</div>
+ <div class="card-body">FBS tail hits &pound;6m instead of &pound;3.8m. Deal works comfortably. Returns compress from ~28% to ~24%. Bear case ~17%.</div>
+</div>
+<div class="card" style="border-top:3px solid var(--phfc-amber)">
+ <div class="card-label" style="color:var(--phfc-amber)">Double Stress</div>
+ <div class="card-val" style="font-size:18px;color:var(--phfc-amber)">14% IRR</div>
+ <div class="card-body">FBS &pound;6m AND rump EBITDA trends to &pound;3m (FY25 run-rate). Below most hurdle rates but <strong>capital is preserved</strong> at 1.9x MoIC. Not a loss scenario.</div>
+</div>
+<div class="card" style="border-top:3px solid var(--red)">
+ <div class="card-label" style="color:var(--red)">Triple Stress</div>
+ <div class="card-val" style="font-size:18px;color:var(--red)">11% IRR</div>
+ <div class="card-body">All three simultaneously. Returns compress to 11% base / 4% bear. Capital preservation only (1.7x / 1.2x). <strong>This is the scenario where the deal fails to deliver.</strong> Probability: low (FBS/EBITDA correlated, SLB independent).</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.6 &mdash; Exhibitions: Wind-Down vs. Trade Sale</div>
+<h2>Momart Exhibitions &mdash; Two Paths</h2>
+<div class="sub">The original pitch assumed wind-down. But TSG/Cadogan Tate is actively acquiring art logistics businesses. A trade sale could be NPV-positive.</div>
+
+<div class="grid-2">
+<div class="card" style="border-top:3px solid var(--red)">
+ <div class="card-label" style="color:var(--red)">Path A: Wind-Down (Base Case)</div>
+ <div class="card-body" style="font-size:12px;line-height:1.8">
+  <strong>Redundancy:</strong> ~20 installation crew &times; &pound;30k avg = &pound;600k base, &pound;1m bear.<br>
+  <strong>Committed museum contracts:</strong> Major institutions commission 12&ndash;18 months ahead. Early termination penalties likely. <span style="color:var(--red)">UNKNOWN &mdash; diligence required.</span> Est. &pound;400&ndash;900k.<br>
+  <strong>Leyton stranded space:</strong> Exhibitions uses portion of Hines SLB warehouse. Post-closure: stranded unless sublet or repurposed for Storage expansion. 20-year FRI lease &mdash; cannot exit. Est. &pound;0&ndash;400k.<br>
+  <strong>Equipment:</strong> Specialist rigging, climate crates. Limited secondary market. &pound;150&ndash;400k.<br>
+  <strong>In-flight project overruns:</strong> &pound;0&ndash;500k.<br>
+  <strong>Client relationship risk:</strong> Closing Exhibitions while retaining Gallery/Storage clients from the same institutions requires careful messaging.<br><br>
+  <strong>Revised total: &pound;1,150&ndash;3,200k</strong> (expanded from original &pound;1,150&ndash;2,700k due to committed contract and stranded space analysis).
+ </div>
+</div>
+<div class="card" style="border-top:3px solid var(--fic-teal)">
+ <div class="card-label" style="color:var(--fic-teal)">Path B: Trade Sale (Upside Scenario)</div>
+ <div class="card-body" style="font-size:12px;line-height:1.8">
+  <strong>Cadogan Tate (TSG-backed):</strong> Active acquirer &mdash; bought Artemis (Dec 2023), Art Care (May 2022), Wetzel (Nov 2020). Exhibitions is complementary to their platform. UK museum relationships they currently lack. Est. price: <strong>&pound;1&ndash;3m</strong>. Probability: Medium.<br>
+  <strong>Management buyout:</strong> Exhibition team goes independent. Museum relationships are personal. Avoids redundancy entirely. Est. price: &pound;0.5&ndash;1m. Probability: Medium.<br>
+  <strong>Crown Fine Art:</strong> Cadogan Tate competitor. Smaller, less acquisitive. &pound;0.5&ndash;1.5m. Probability: Low.<br><br>
+  <strong>Net swing vs. wind-down:</strong> Trade sale avoids &pound;600k+ redundancy AND generates &pound;1&ndash;3m proceeds = <strong>&pound;1.6&ndash;3.6m NPV improvement</strong>. On a &pound;12.7m equity cheque, this is material.<br><br>
+  <strong>Action:</strong> Sound out Cadogan Tate / TSG during Weeks 8&ndash;16 (parallel to Momart client references). If no trade buyer, execute wind-down.
+ </div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.7 &mdash; Risk Register</div>
+<h2>Risk Register (Final)</h2>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Risk</th><th>Sev.</th><th>Impact</th><th>Mitigant</th></tr></thead>
+<tbody>
+<tr><td>Zucker will not sell (28.7%)</td><td><span class="badge badge-red">HIGH</span></td><td>Transaction does not happen</td><td><strong>RESTORED to HIGH.</strong> Fyffes precedent informative but different dynamics (&pound;751m Sumitomo deal vs &pound;43m mid-market PE). Zucker holding may have emotional/legacy significance. Mitigant: channel testable via Johnston at zero cost. She IS price-sensitive (Bowl America) and HAS signed irrevocable undertakings before. But reservation price may be &gt;30%. See premium sensitivity (&sect; 7.3).</td></tr>
+<tr><td style="color:var(--red)"><strong>FIG/Crown land lease repricing</strong></td><td><span class="badge badge-red">HIGH</span></td><td>+&pound;500k p.a. OpEx = &minus;&pound;5m EV</td><td><strong>ADDED.</strong> Endogenous to acquisition. PE buyer may trigger FIG political resistance. Must diligence tenure, change-of-control, consent requirements BEFORE IC. See &sect; 7.2.</td></tr>
+<tr><td>FBS construction tail risk</td><td><span class="badge badge-red">HIGH</span></td><td>&pound;1&ndash;3m further loss on MOD contract</td><td><strong>UPGRADED from MED.</strong> FY25 showed &pound;9.5m FBS loss at FIC level. Tail may be larger than base-case &pound;2.65m wind-down. Quantify in diligence. Negotiate warranty.</td></tr>
+<tr><td>Momart structural decline</td><td><span class="badge badge-amber">MED</span></td><td>Art market contraction impairs storage</td><td>Client reference calls. Key personnel retention review.</td></tr>
+<tr><td>Leyton SLB (IFRS 16)</td><td><span class="badge badge-amber">MED</span></td><td>IFRS 16 EV = &pound;37.7m (7.5x not 3.2x)</td><td>Pre-IFRS 16 treatment is correct. Must be labelled explicitly. Hines SLB Sep 2025. Change-of-control provisions UNKNOWN.</td></tr>
+<tr><td>Argentine holder (2.3%)</td><td><span class="badge badge-green">LOW</span></td><td>Geopolitical complication</td><td>Discreet inquiry into beneficial ownership.</td></tr>
+<tr><td>Asbestos / environmental</td><td><span class="badge badge-amber">MED</span></td><td>Pre-1980 FIC buildings, PHFC vessels</td><td>Phase 1 environmental survey + asbestos register required pre-acquisition.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 7.2 &mdash; IC Recommendation</div>
+<h2>Recommended Next Steps</h2>
+<div class="sub">Proceed to structured confidential pre-approach &mdash; sequenced by priority, minimal cost. Target: 348p (30% premium) with mandate to negotiate up to 375p (40%) if required to secure Zucker acceptance.</div>
+
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Action</th><th>Timeline</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><strong>GATE 1:</strong> Zucker channel via Johnston</td><td>Weeks 1&ndash;4</td><td>Zero cost. Stop/go decision. Sound willingness + indicative premium range.</td></tr>
+<tr><td><strong>GATE 2:</strong> FY2025 annual report review</td><td>Weeks 1&ndash;2</td><td>Public document. Confirm FBS provision quantum.</td></tr>
+<tr><td><strong>GATE 3:</strong> FIG Crown land inquiry</td><td>Weeks 2&ndash;6</td><td><strong>NEW.</strong> Via Johnston/FIC local management. Confirm lease tenure, change-of-control provisions, FIG stance on private ownership. This is the cheapest way to resolve the highest-impact unknown.</td></tr>
+<tr><td>FIC RICS property appraisal</td><td>Weeks 4&ndash;10</td><td>If gates positive. Est. &pound;15&ndash;20k. Covers owned land (400 acres) and leased premises.</td></tr>
+<tr><td>Management access + sub-segment P&amp;L</td><td>Weeks 6&ndash;12</td><td>Post-NDA. Confirm Momart Storage standalone economics. Confirm FBS tail.</td></tr>
+<tr><td>Momart client references + HR diligence</td><td>Weeks 8&ndash;16</td><td>10 institutional relationships. Parallel: sound out Cadogan Tate / TSG for Exhibitions trade sale interest.</td></tr>
+<tr><td>Formal offer + scheme / exclusivity</td><td>Weeks 16&ndash;24</td><td>Board approach. Target: 348p (30%). Mandate to 375p (40%) with IC re-approval.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 8: FINANCIALS ═══════ -->
+<div id="tab-financials" class="tab-panel">
+<div class="container">
+
+<div class="section">
+<div class="section-label">&sect; 8.1 &mdash; FIH Group Consolidated</div>
+<h2>Consolidated Income Statement</h2>
+<div class="sub">FIH Group PLC &middot; FY2020&ndash;FY2025 &middot; &pound;&rsquo;000</div>
+
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>&pound;&rsquo;000</th><th class="r">FY20</th><th class="r">FY21</th><th class="r">FY22</th><th class="r">FY23</th><th class="r">FY24</th><th class="r">FY25</th></tr></thead>
+<tbody>
+<tr><td>Revenue</td><td class="r cell-val">44,600</td><td class="r cell-val">32,578</td><td class="r cell-val">40,319</td><td class="r cell-val">52,712</td><td class="r cell-val">52,460</td><td class="r cell-val" style="color:var(--red)">40,850</td></tr>
+<tr><td>Cost of sales</td><td class="r">(26,521)</td><td class="r">(19,437)</td><td class="r">(23,405)</td><td class="r">(31,588)</td><td class="r">(30,000)</td><td class="r">(27,226)</td></tr>
+<tr><td>Gross profit</td><td class="r cell-val">18,079</td><td class="r cell-val">13,141</td><td class="r cell-val">16,914</td><td class="r cell-val">21,124</td><td class="r cell-val">22,460</td><td class="r cell-val">13,624</td></tr>
+<tr><td>Operating expenses</td><td class="r">(20,993)</td><td class="r">(12,058)</td><td class="r">(14,134)</td><td class="r">(17,190)</td><td class="r">(18,815)</td><td class="r">(19,359)</td></tr>
+<tr><td>Operating profit / (loss)</td><td class="r cell-val" style="color:var(--red)">(2,914)</td><td class="r cell-val">1,083</td><td class="r cell-val">2,780</td><td class="r cell-val">3,934</td><td class="r cell-val">3,645</td><td class="r cell-val" style="color:var(--red)">(5,735)</td></tr>
+<tr><td>Profit / (loss) before tax</td><td class="r cell-val" style="color:var(--red)">(3,770)</td><td class="r cell-val">202</td><td class="r cell-val">1,984</td><td class="r cell-val">4,046</td><td class="r cell-val">2,762</td><td class="r cell-val" style="color:var(--red)">(6,649)</td></tr>
+<tr><td>Profit / (loss) for year</td><td class="r cell-val" style="color:var(--red)">(4,728)</td><td class="r cell-val">9</td><td class="r cell-val">947</td><td class="r cell-val">3,122</td><td class="r cell-val">1,966</td><td class="r cell-val" style="color:var(--red)">(5,131)</td></tr>
+<tr><td>Basic EPS (p)</td><td class="r cell-val" style="color:var(--red)">(37.8p)</td><td class="r cell-val">0.1p</td><td class="r cell-val">7.6p</td><td class="r cell-val">24.9p</td><td class="r cell-val">15.7p</td><td class="r cell-val" style="color:var(--red)">(41.0p)</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 8.2 &mdash; FY2024 Segmental</div>
+<h2>Segmental Breakdown</h2>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Segment</th><th class="r">Revenue (&pound;k)</th><th class="r">Op Profit (&pound;k)</th><th class="r">OP Margin</th><th class="r">Total D&amp;A (&pound;k)</th><th class="r">EBITDA (&pound;k)</th><th class="r">EBITDA Margin</th></tr></thead>
+<tbody>
+<tr><td style="color:var(--fic-teal)">FIC (Falkland Islands Co.)</td><td class="r cell-val">29,028</td><td class="r cell-val">1,766</td><td class="r">6.1%</td><td class="r">1,073</td><td class="r cell-val">2,839</td><td class="r">9.8%</td></tr>
+<tr><td style="color:var(--phfc-amber)">PHFC (Gosport Ferry group)</td><td class="r cell-val">4,177</td><td class="r cell-val">856</td><td class="r">20.5%</td><td class="r">499</td><td class="r cell-val">1,355</td><td class="r">32.4%</td></tr>
+<tr><td style="color:var(--momart-purple)">Momart (art logistics)</td><td class="r cell-val">19,240</td><td class="r cell-val">1,394</td><td class="r">7.2%</td><td class="r">767</td><td class="r cell-val">2,161</td><td class="r">11.2%</td></tr>
+<tr><td>Unallocated / HoldCo</td><td class="r">&mdash;</td><td class="r">&mdash;</td><td class="r">&mdash;</td><td class="r">237</td><td class="r">237</td><td class="r">&mdash;</td></tr>
+<tr style="border-top:2px solid var(--border-bright)"><td><strong>Group Total</strong></td><td class="r cell-val"><strong>52,445</strong></td><td class="r cell-val"><strong>4,016</strong></td><td class="r"><strong>7.7%</strong></td><td class="r"><strong>2,576</strong></td><td class="r cell-val"><strong>6,592</strong></td><td class="r"><strong>12.6%</strong></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">&sect; 8.3 &mdash; Subsidiary Entity Detail</div>
+<h2>Entity Accounts</h2>
+<div class="sub">Operating profit by subsidiary statutory accounts. FIC Ltd is the consolidated Falklands group (includes FITC &mdash; do not double-count).</div>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th>Entity</th><th class="r">FY20</th><th class="r">FY21</th><th class="r">FY22</th><th class="r">FY23</th><th class="r">FY24</th><th class="r">FY25</th></tr></thead>
+<tbody>
+<tr><td style="color:var(--fic-teal)">FIC Ltd (consolidated)</td><td class="r">1,084</td><td class="r">1,241</td><td class="r">889</td><td class="r">862</td><td class="r cell-val">692</td><td class="r cell-val" style="color:var(--red)">(8,498)</td></tr>
+<tr><td style="color:var(--text-dim)">&nbsp; &rdsh; FITC (reference only)</td><td class="r" style="color:var(--text-faint)">289</td><td class="r" style="color:var(--text-faint)">381</td><td class="r" style="color:var(--text-faint)">348</td><td class="r" style="color:var(--text-faint)">433</td><td class="r" style="color:var(--text-faint)">450</td><td class="r" style="color:var(--text-faint)">402</td></tr>
+<tr><td style="color:var(--momart-purple)">Momart Ltd</td><td class="r">1,268</td><td class="r cell-val" style="color:var(--red)">(475)</td><td class="r">1,085</td><td class="r">1,234</td><td class="r cell-val">658</td><td class="r cell-val">364</td></tr>
+<tr><td style="color:var(--phfc-amber)">Gosport Ferry Ltd</td><td class="r">491</td><td class="r cell-val" style="color:var(--red)">(1,339)</td><td class="r cell-val" style="color:var(--red)">(171)</td><td class="r">428</td><td class="r cell-val">980</td><td class="r cell-val">1,042</td></tr>
+<tr><td>PHC Ltd</td><td class="r">164</td><td class="r">2</td><td class="r">86</td><td class="r">196</td><td class="r">(12)</td><td class="r">(18)</td></tr>
+<tr><td>CME Ltd</td><td class="r">131</td><td class="r">143</td><td class="r">156</td><td class="r">(38)</td><td class="r">(43)</td><td class="r">(49)</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin-top:8px;font-size:10px;color:var(--text-faint)">FY25 FIC loss driven by FBS construction provisions. Gosport Ferry FY25 is the strongest result in 5 years. Entity accounts use FRS102 (UK GAAP); FIH consolidated uses IFRS. Differences = IFRS 16, IAS 19, goodwill amortisation. Use FIH consolidated OP as ground truth. <strong>Tax jurisdiction note:</strong> FIC operates under Falkland Islands tax law &mdash; CT is 21% on first &pound;500k profits, 26% above (FIG Taxation Office). No VAT. Momart operates under UK CT at 23%. Model uses blended 23.5% rate. Falklands has a Double Taxation Agreement with the UK.</p>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════ TAB 9: SOURCES ═══════ -->
+<div id="tab-sources" class="tab-panel">
+<div class="container">
+<div class="section">
+<div class="section-label">Sources</div>
+<h2>Data Sources &amp; Methodology</h2>
+<div class="table-wrap">
+<table class="ct">
+<thead><tr><th style="width:300px">Source</th><th>Data Used</th></tr></thead>
+<tbody>
+<tr><td><strong>FIH Group plc &mdash; RNS Filings</strong><br><span style="font-size:10px;color:var(--text-dim)">FY2024 Annual Report; PHFC Disposal RNS (2 Mar 2026); FY2025 Preliminary Results</span></td><td>Group consolidated financials (FY20&ndash;FY25). Segmental revenue, operating profit, D&amp;A, capex. PHFC sale proceeds and terms. Balance sheet (cash, debt, net assets). Equity bridge pre/post disposal.</td></tr>
+<tr><td><strong>FIC Ltd &mdash; Statutory Accounts</strong><br><span style="font-size:10px;color:var(--text-dim)">Companies House filing. Consolidated (includes FITC).</span></td><td>FIC P&amp;L (FY19&ndash;FY25). Balance sheet. Key margins. FBS Construction impact within FIC consolidated.</td></tr>
+<tr><td><strong>FITC Ltd &mdash; Statutory Accounts</strong><br><span style="font-size:10px;color:var(--text-dim)">Companies House filing. Subsidiary of FIC.</span></td><td>Trading company P&amp;L. Used as reference only &mdash; already consolidated within FIC Ltd.</td></tr>
+<tr><td><strong>Momart Ltd &mdash; Statutory Accounts</strong><br><span style="font-size:10px;color:var(--text-dim)">Companies House filing. FY2019&ndash;FY2025.</span></td><td>Momart P&amp;L. Storage, Gallery, Exhibitions sub-segment estimates. Leyton SLB impact.</td></tr>
+<tr><td><strong>Gosport Ferry Ltd &mdash; Statutory Accounts</strong></td><td>Ferry P&amp;L (FY20&ndash;FY25). Vessel D&amp;A. Creditors &gt;1yr (net debt for PHFC EV calculation).</td></tr>
+<tr><td><strong>PHC Ltd / CME Ltd &mdash; Statutory Accounts</strong></td><td>PHFC subsidiary financials. Intra-group eliminations. Immaterial external revenue.</td></tr>
+<tr><td><strong>SEC Filings &mdash; Zucker Trust</strong><br><span style="font-size:10px;color:var(--text-dim)">Schedule 13D filings (Fyffes, FR Bison, Bowl America, Colabor, Titan Logix, Vicon, Corning Natural Gas, Optical Cable)</span></td><td>Trust structure confirmation. Sole voting/dispositive power. Precedent irrevocable undertakings and support agreements.</td></tr>
+<tr><td><strong>Sumitomo Corp &mdash; Fyffes Takeover Document</strong></td><td>Irrevocable undertaking from Article 6 Marital Trust to support Sumitomo&rsquo;s acquisition of Fyffes plc.</td></tr>
+<tr><td><strong>FIH Group plc &mdash; Company Website</strong></td><td>Board composition. Johnston as Zucker Trust representative. 28.92% holding confirmation.</td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin-top:12px;font-size:10px;color:var(--text-faint)">All financial data FY2024 basis unless stated. Pre-IFRS 16 throughout (Leyton SLB = operating lease, off-balance sheet). IFRS 16 cross-check included in Liability Audit. Prepared by Joe Barry, March 2026.</p>
+</div>
+</div>
+</div>
+
+</div><!-- end #main-content -->
+
+<script>
+function initCharts() {}
+</script>
+
+</body>
+</html>
